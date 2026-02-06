@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(pico_sdk_import.cmake)
+# Pico SDK を自動取得する
+include(FetchContent)
+
+FetchContent_Declare(
+  pico_sdk
+  GIT_REPOSITORY https://github.com/raspberrypi/pico-sdk.git
+  GIT_TAG master
+)
+
+FetchContent_MakeAvailable(pico_sdk)
 
 project(hid_touch C CXX ASM)
 
