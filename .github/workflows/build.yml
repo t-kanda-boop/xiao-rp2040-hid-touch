@@ -1,0 +1,48 @@
+name: Build RP2040 UF2
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ARM GCC
+        run: |
+          sudo apt update
+          sudo apt install -y gcc-arm-none-eabi cmake ninja-build
+
+      - name: Clone Pico SDK
+        run: |
+          git clone https://github.com/raspberrypi/pico-sdk.git
+          cd pico-sdk
+          git submodule update --init
+
+      - name: Set Pico SDK Path
+        run: echo "PICO_SDK_PATH=${{ github.workspace }}/pico-sdk" >> $GITHUB_ENV
+
+      - name: Create build directory
+        run: mkdir build
+
+      - name: Run CMake
+        run: |
+          cd build
+          cmake ..
+
+      - name: Build
+        run: |
+          cd build
+          make
+
+      - name: Upload UF2 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hid_touch_uf2
+          path: build/*.uf2
