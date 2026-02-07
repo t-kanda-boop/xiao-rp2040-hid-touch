@@ -80,6 +80,19 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
   return desc_configuration;
 }
 
+// HID Set Report Callback（必須）
+void tud_hid_set_report_cb(uint8_t instance,
+                           uint8_t report_id,
+                           hid_report_type_t report_type,
+                           uint8_t const* buffer,
+                           uint16_t bufsize)
+{
+  (void) instance;
+  (void) report_id;
+  (void) report_type;
+  (void) buffer;
+  (void) bufsize;
+}
 
 // ======================
 // USB Descriptors
