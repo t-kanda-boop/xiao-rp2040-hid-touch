@@ -24,6 +24,10 @@ jobs:
           git clone https://github.com/raspberrypi/pico-sdk.git
           cd pico-sdk
           git submodule update --init
+      
+      - name: Copy pico_sdk_import.cmake
+        run: |
+          cp pico-sdk/external/pico_sdk_import.cmake .
 
       - name: Set Pico SDK Path
         run: echo "PICO_SDK_PATH=${{ github.workspace }}/pico-sdk" >> $GITHUB_ENV
