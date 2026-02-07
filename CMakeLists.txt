@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
 
+# C++を有効化（重要）
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -10,7 +14,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(pico_sdk)
 
-project(hid_touch C ASM)   # ← CXX を削除する
+project(hid_touch C CXX ASM)
 
 pico_sdk_init()
 
