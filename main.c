@@ -2,6 +2,7 @@
 #include "pico/stdlib.h"
 #include "bsp/board.h"
 #include "tusb.h"
+#include "pico/time.h"
 
 /*------------------------------------------------------------------*/
 /*  設定
@@ -83,8 +84,6 @@ uint8_t const* tud_descriptor_device_cb(void)
 /*------------------------------------------------------------------*/
 /*  Configuration Descriptor
 /*------------------------------------------------------------------*/
-#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
-
 #define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
 
 static const uint8_t desc_configuration[] =
@@ -254,6 +253,11 @@ static void swipe(uint16_t x1, uint16_t y1,
     send_touch(end_x, end_y, false);
 }
 
+static inline uint32_t millis(void)
+{
+    return to_ms_since_boot(get_absolute_time());
+}
+
 /*------------------------------------------------------------------*/
 /*  Main
 /*------------------------------------------------------------------*/
@@ -262,16 +266,24 @@ int main(void)
   board_init();
   tusb_init();
 
-  uint32_t timer = 0;
+  while (!tud_mounted())
+  {
+      tud_task();
+  }
+
+  uint32_t timer = millis();
 
   while (1)
   {
     tud_task();
 
-    if (board_millis() - timer > TOUCH_INTERVAL)
+    if (millis() - timer > TOUCH_INTERVAL)
     {
-      timer = board_millis();
+      timer = millis();
+
       swipe(500, 1800, 500, 600);
+      sleep_ms(300);
+
       tap(900, 2350);
       sleep_ms(500);
       tap(800, 1700);
@@ -286,9 +298,15 @@ int main(void)
     else
     {
       tap(900, 2050);
+      sleep_ms(200);
       tap(420, 2550);
+      sleep_ms(200);
       tap(900, 2050);
+      sleep_ms(200);
       tap(90, 2550);
+      sleep_ms(200);
     }
+
+    sleep_ms(10);
   }
 }
