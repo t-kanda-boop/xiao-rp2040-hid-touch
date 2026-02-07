@@ -264,6 +264,7 @@ static inline uint32_t millis(void)
 int main(void)
 {
   board_init();
+  stdio_init_all);
   tusb_init();
 
   while (!tud_mounted())
