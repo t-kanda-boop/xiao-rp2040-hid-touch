@@ -41,8 +41,9 @@ uint8_t const desc_hid_report[] =
 // USB Descriptors
 // ======================
 
-uint8_t const * tud_hid_descriptor_report_cb(void)
+uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
 {
+  (void) instance;  // 未使用警告防止
   return desc_hid_report;
 }
 
