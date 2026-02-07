@@ -121,6 +121,50 @@ uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
   return desc_hid_report;
 }
 
+// -----------------------
+// String Descriptors
+// -----------------------
+
+char const* string_desc_arr[] =
+{
+  (const char[]){ 0x09, 0x04 }, // 0: English (0x0409)
+  "XIAO",                       // 1: Manufacturer
+  "HID Touch",                  // 2: Product
+  "123456",                     // 3: Serial
+};
+
+static uint16_t _desc_str[32];
+
+uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
+{
+  (void) langid;
+
+  uint8_t chr_count;
+
+  if (index == 0)
+  {
+    _desc_str[1] = 0x0409;
+    chr_count = 1;
+  }
+  else
+  {
+    if (!(index < sizeof(string_desc_arr)/sizeof(string_desc_arr[0])))
+      return NULL;
+
+    const char* str = string_desc_arr[index];
+    chr_count = strlen(str);
+
+    for (uint8_t i = 0; i < chr_count; i++)
+    {
+      _desc_str[1 + i] = str[i];
+    }
+  }
+
+  _desc_str[0] = (TUSB_DESC_STRING << 8) | (2*chr_count + 2);
+
+  return _desc_str;
+}
+
 // ======================
 // 座標変換
 // ======================
