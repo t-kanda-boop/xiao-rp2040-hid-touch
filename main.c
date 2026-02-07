@@ -257,6 +257,10 @@ int main(void)
       sleep_ms(500);
       tap(500, 2000);
       sleep_ms(500);
+      tap(300, 2000);
+      sleep_ms(500);
+      tap(500, 2550);
+      sleep_ms(500);
     }
     else
     {
