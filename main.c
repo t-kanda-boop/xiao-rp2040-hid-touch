@@ -13,7 +13,7 @@
 #define SWIPE_STEPS     20     // 分割数（滑らかさ）
 #define SWIPE_DELAY     10     // 各ステップ間隔(ms)
 
-#define HID_REPORT_SIZE 5
+#define HID_REPORT_SIZE 6
 
 /*------------------------------------------------------------------*/
 /*  HID Report Descriptor (Single Touch Digitizer)
@@ -23,28 +23,37 @@ static const uint8_t desc_hid_report[] =
   0x05, 0x0D,        // Usage Page (Digitizer)
   0x09, 0x04,        // Usage (Touch Screen)
   0xA1, 0x01,        // Collection (Application)
+
+  0x85, 0x01,        //   Report ID (1)
+
   0x09, 0x22,        //   Usage (Finger)
   0xA1, 0x02,        //   Collection (Logical)
-  0x09, 0x42,        //     Usage (Tip Switch)
+
+  0x09, 0x42,        //     Tip Switch
+  0x09, 0x32,        //     In Range
   0x15, 0x00,
   0x25, 0x01,
   0x75, 0x01,
-  0x95, 0x01,
+  0x95, 0x02,
   0x81, 0x02,
-  0x75, 0x07,
+
+  0x75, 0x06,
   0x95, 0x01,
   0x81, 0x03,
-  0x05, 0x01,        //     Usage Page (Generic Desktop)
-  0x09, 0x30,        //     Usage (X)
-  0x09, 0x31,        //     Usage (Y)
+
+  0x05, 0x01,
+  0x09, 0x30,        // X
+  0x09, 0x31,        // Y
   0x16, 0x00, 0x00,
   0x26, 0xFF, 0x7F,
   0x75, 0x10,
   0x95, 0x02,
   0x81, 0x02,
+
   0xC0,
   0xC0
 };
+
 
 /*------------------------------------------------------------------*/
 /*  Device Descriptor
@@ -184,14 +193,16 @@ static inline uint16_t convert_y(uint16_t py)
 /*------------------------------------------------------------------*/
 static void send_touch(uint16_t x, uint16_t y, bool pressed)
 {
-  uint8_t report[HID_REPORT_SIZE] =
-  {
-    pressed ? 1 : 0,
-    x & 0xFF, (x >> 8) & 0xFF,
-    y & 0xFF, (y >> 8) & 0xFF
-  };
+    uint8_t report[HID_REPORT_SIZE];
 
-  tud_hid_report(0, report, sizeof(report));
+    report[0] = 0x01;                 // Report ID
+    report[1] = pressed ? 0x03 : 0x00; // Tip + InRange
+    report[2] = x & 0xFF;
+    report[3] = (x >> 8) & 0xFF;
+    report[4] = y & 0xFF;
+    report[5] = (y >> 8) & 0xFF;
+
+    tud_hid_report(1, report, sizeof(report));
 }
 
 static void tap(uint16_t px, uint16_t py)
