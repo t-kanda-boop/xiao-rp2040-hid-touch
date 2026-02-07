@@ -94,6 +94,23 @@ void tud_hid_set_report_cb(uint8_t instance,
   (void) bufsize;
 }
 
+// HID Get Report Callback（必須）
+uint16_t tud_hid_get_report_cb(uint8_t instance,
+                               uint8_t report_id,
+                               hid_report_type_t report_type,
+                               uint8_t* buffer,
+                               uint16_t reqlen)
+{
+  (void) instance;
+  (void) report_id;
+  (void) report_type;
+  (void) buffer;
+  (void) reqlen;
+
+  // 何も返さない（タッチでは不要）
+  return 0;
+}
+
 // ======================
 // USB Descriptors
 // ======================
