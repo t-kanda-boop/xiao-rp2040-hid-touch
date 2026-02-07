@@ -20,4 +20,7 @@ target_link_libraries(hid_touch
     tinyusb_board
 )
 
+pico_enable_stdio_usb(hid_touch 0)
+pico_enable_stdio_uart(hid_touch 0)
+
 pico_add_extra_outputs(hid_touch)
