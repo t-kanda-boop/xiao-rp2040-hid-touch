@@ -98,7 +98,7 @@ static const uint8_t desc_configuration[] =
                      sizeof(desc_hid_report),
                      0x81,     // EP IN
                      64,       // EP size
-                     10)       // Poll interval
+                     5)       // Poll interval
 };
 
 uint8_t const* tud_descriptor_configuration_cb(uint8_t index)
@@ -214,48 +214,60 @@ static void send_touch(uint16_t x, uint16_t y, bool pressed)
     tud_hid_report(1, report, sizeof(report));
 }
 
-static void tap(uint16_t px, uint16_t py)
-{
-  uint16_t x = convert_x(px);
-  uint16_t y = convert_y(py);
+/* --- 省略（Descriptor部はそのまま使用してください） --- */
 
-  send_touch(x, y, true);
-  sleep_ms(TOUCH_DURATION);
-  send_touch(x, y, false);
-  sleep_ms(TOUCH_DURATION);
-}
+/*------------------------------------------------------------------*/
+/*  ノンブロッキングタッチ制御
+/*------------------------------------------------------------------*/
 
-static void swipe(uint16_t x1, uint16_t y1,
-                  uint16_t x2, uint16_t y2)
-{
-    uint16_t start_x = convert_x(x1);
-    uint16_t start_y = convert_y(y1);
-    uint16_t end_x   = convert_x(x2);
-    uint16_t end_y   = convert_y(y2);
+typedef enum {
+  TOUCH_IDLE,
+  TOUCH_PRESS,
+  TOUCH_RELEASE
+} touch_state_t;
 
-    int32_t dx = (int32_t)end_x - start_x;
-    int32_t dy = (int32_t)end_y - start_y;
+static touch_state_t touch_state = TOUCH_IDLE;
 
-    // 押す
-    send_touch(start_x, start_y, true);
-    sleep_ms(SWIPE_DELAY);
-
-    for (int i = 1; i <= SWIPE_STEPS; i++)
-    {
-        uint16_t move_x = start_x + (dx * i) / SWIPE_STEPS;
-        uint16_t move_y = start_y + (dy * i) / SWIPE_STEPS;
-
-        send_touch(move_x, move_y, true);
-        sleep_ms(SWIPE_DELAY);
-    }
-
-    // 離す
-    send_touch(end_x, end_y, false);
-}
+static uint32_t touch_timer = 0;
+static uint16_t touch_x = 0;
+static uint16_t touch_y = 0;
 
 static inline uint32_t millis(void)
 {
-    return to_ms_since_boot(get_absolute_time());
+  return to_ms_since_boot(get_absolute_time());
+}
+
+static void tap_start(uint16_t px, uint16_t py)
+{
+  touch_x = convert_x(px);
+  touch_y = convert_y(py);
+
+  send_touch(touch_x, touch_y, true);
+
+  touch_timer = millis();
+  touch_state = TOUCH_PRESS;
+}
+
+static void tap_task(void)
+{
+  uint32_t now = millis();
+
+  if (touch_state == TOUCH_PRESS)
+  {
+    if (now - touch_timer >= TOUCH_DURATION)
+    {
+      send_touch(touch_x, touch_y, false);
+      touch_timer = now;
+      touch_state = TOUCH_RELEASE;
+    }
+  }
+  else if (touch_state == TOUCH_RELEASE)
+  {
+    if (now - touch_timer >= TOUCH_DURATION)
+    {
+      touch_state = TOUCH_IDLE;
+    }
+  }
 }
 
 /*------------------------------------------------------------------*/
@@ -264,41 +276,33 @@ static inline uint32_t millis(void)
 int main(void)
 {
   board_init();
-  stdio_init_all();
   tusb_init();
 
   while (!tud_mounted())
   {
-      tud_task();
+    tud_task();
   }
 
-  uint32_t timer = millis();
+  uint32_t interval_timer = millis();
 
   while (1)
   {
     tud_task();
+    tap_task();
 
-    if (millis() - timer > TOUCH_INTERVAL)
+    uint32_t now = millis();
+
+    if (touch_state == TOUCH_IDLE)
     {
-      timer = millis();
-
-      swipe(500, 1800, 500, 600);
-      sleep_ms(300);
-
-      tap(900, 2350);
-      tap(800, 1700);
-      tap(500, 2000);
-      tap(300, 2000);
-      tap(500, 2550);
+      if (now - interval_timer > TOUCH_INTERVAL)
+      {
+        interval_timer = now;
+        tap_start(900, 2350);
+      }
+      else
+      {
+        tap_start(900, 2050);
+      }
     }
-    else
-    {
-      tap(900, 2050);
-      tap(420, 2550);
-      tap(900, 2050);
-      tap(90, 2550);
-    }
-
-    sleep_ms(10);
   }
 }
