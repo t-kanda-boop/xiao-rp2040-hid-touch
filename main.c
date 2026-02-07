@@ -54,7 +54,6 @@ static const uint8_t desc_hid_report[] =
   0xC0
 };
 
-
 /*------------------------------------------------------------------*/
 /*  Device Descriptor
 /*------------------------------------------------------------------*/
@@ -86,12 +85,21 @@ uint8_t const* tud_descriptor_device_cb(void)
 /*------------------------------------------------------------------*/
 #define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
 
+#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
+
 static const uint8_t desc_configuration[] =
 {
-  TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN, 0x00, 100),
-  TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_NONE,
+  TUD_CONFIG_DESCRIPTOR(1, 1, 0, CONFIG_TOTAL_LEN,
+                        TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP,
+                        100),
+
+  TUD_HID_DESCRIPTOR(0,        // Interface number
+                     0,        // String index
+                     HID_ITF_PROTOCOL_NONE,
                      sizeof(desc_hid_report),
-                     0x81, 16, 10)
+                     0x81,     // EP IN
+                     64,       // EP size
+                     10)       // Poll interval
 };
 
 uint8_t const* tud_descriptor_configuration_cb(uint8_t index)
@@ -191,6 +199,9 @@ static inline uint16_t convert_y(uint16_t py)
 /*------------------------------------------------------------------*/
 /*  タッチ送信
 /*------------------------------------------------------------------*/
+if (!tud_mounted()) return;
+if (!tud_hid_ready()) return;
+
 static void send_touch(uint16_t x, uint16_t y, bool pressed)
 {
     uint8_t report[HID_REPORT_SIZE];
