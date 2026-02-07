@@ -199,11 +199,10 @@ static inline uint16_t convert_y(uint16_t py)
 /*------------------------------------------------------------------*/
 /*  タッチ送信
 /*------------------------------------------------------------------*/
-if (!tud_mounted()) return;
-if (!tud_hid_ready()) return;
-
 static void send_touch(uint16_t x, uint16_t y, bool pressed)
 {
+    if (!tud_mounted()) return;
+    if (!tud_hid_ready()) return;
     uint8_t report[HID_REPORT_SIZE];
 
     report[0] = 0x01;                 // Report ID
